@@ -8,19 +8,21 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func InitRoutes() http.Handler {
+func InitRoutes(
+	userHandler *userhandler.UserHandler,
+) http.Handler {
 	router := chi.NewRouter()
 
 	router.Route("/auth", func(r chi.Router) {
-		r.Post("/register", userhandler.Register)
-		r.Post("/login", userhandler.Login)
+		r.Post("/register", userHandler.Register)
+		// r.Post("/login", userHandler.Login)
 		// r.Post("/logout", Logout)
 
 	})
 
 	router.Route("/user", func(r chi.Router) {
 		r.Use(middleware.Authenticate)
-		r.Get("/profile", userhandler.Profile)
+		// r.Get("/profile", userHandler.Profile)
 	})
 
 	return router

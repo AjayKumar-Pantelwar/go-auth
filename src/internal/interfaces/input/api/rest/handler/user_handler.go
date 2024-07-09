@@ -3,15 +3,24 @@ package userhandler
 import (
 	"encoding/json"
 	"fmt"
-	"go-authentication/src/db"
-	util "go-authentication/src/utils"
+	user "go-authentication/src/internal/core"
+	userservice "go-authentication/src/internal/usecase"
+	"go-authentication/src/pkg"
 	"net/http"
 	"time"
 )
+type UserHandler struct {
+	userUsecase userservice.UserServiceImpl
+}
 
-func Register(w http.ResponseWriter, r *http.Request) {
+func NewUserHandler(usecase userservice.UserServiceImpl) UserHandler {
+	return UserHandler{
+		userUsecase: usecase,
+	}
+}
 
-	var user db.User
+func (u *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
+	var user user.User
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -19,7 +28,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	returedUser, err := db.CreateUser(database, user)
+	returedUser, err := u.userUsecase.CreateUser(user)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -34,16 +43,16 @@ func Register(w http.ResponseWriter, r *http.Request) {
 }
 
 // login
-func Login(w http.ResponseWriter, r *http.Request) {
+func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 
-	var user db.User
+	var user user.User
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
 	}
-	returedUser, err := db.GetUser(database, user.Username)
+	returedUser, err := u.userUsecase.GetUser(user.Username)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -51,13 +60,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := db.MatchPassword(database, returedUser, user.Password); err != nil {
+	if err := u.userUsecase.MatchPassword(returedUser, user.Password); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "invalid credentials"})
 		return
 	}
 
-	tokenString, err := util.GenerateJWT(returedUser.Username)
+	tokenString, err := pkg.GenerateJWT(returedUser.Username)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -82,7 +91,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "successful login"})
 }
 
-func Profile(w http.ResponseWriter, r *http.Request) {
+func (u *UserHandler) Profile(w http.ResponseWriter, r *http.Request) {
 
 	userId, ok := r.Context().Value("user").(string)
 
@@ -90,7 +99,7 @@ func Profile(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	returedUser, err := db.GetUser(database, userId)
+	returedUser, err := u.userUsecase.GetUser(userId)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

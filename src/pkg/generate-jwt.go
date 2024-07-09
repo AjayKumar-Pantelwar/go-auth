@@ -1,7 +1,6 @@
-package util
+package pkg
 
 import (
-	"go-authentication/src/db"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -51,7 +50,7 @@ func ValidateJWT(tokenString string) (*Claims, error) {
 	return claims, nil
 }
 
-func generateSession(userId int) (string, error) {
+func GenerateSession(userId int) (map[string]interface{}, error) {
 	tokenId := uuid.New()
 	expiresAt := time.Now().Add(24 * time.Hour)
 	issuedAt := time.Now()
@@ -59,15 +58,16 @@ func generateSession(userId int) (string, error) {
 	hashToken, err := bcrypt.GenerateFromPassword([]byte(tokenId.String()), bcrypt.DefaultCost)
 
 	if err != nil {
-		return "", err
+		return map[string]interface{}{}, err
 	}
 
-	session := db.Session{
-		Id:        tokenId,
-		Uid:       userId,
-		TokenHash: string(hashToken),
-		ExpiresAt: expiresAt,
-		IssuedAt:  issuedAt,
+	session := map[string]interface{}{
+		"Id":        tokenId,
+		"Uid":       userId,
+		"TokenHash": string(hashToken),
+		"ExpiresAt": expiresAt,
+		"IssuedAt":  issuedAt,
 	}
 
+	return session, nil
 }

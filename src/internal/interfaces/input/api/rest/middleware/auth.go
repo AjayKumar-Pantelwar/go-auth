@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"context"
-	util "go-authentication/src/utils"
+	"go-authentication/src/pkg"
 	"net/http"
 )
 
@@ -15,7 +15,7 @@ func Authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		claims, err := util.ValidateJWT(cookie.Value)
+		claims, err := pkg.ValidateJWT(cookie.Value)
 		if err != nil {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return

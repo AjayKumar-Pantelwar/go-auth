@@ -1,4 +1,4 @@
-package db
+package persistance
 
 import (
 	"database/sql"
