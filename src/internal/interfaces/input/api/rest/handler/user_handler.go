@@ -2,13 +2,13 @@ package userhandler
 
 import (
 	"encoding/json"
-	"fmt"
 	user "go-authentication/src/internal/core"
 	userservice "go-authentication/src/internal/usecase"
 	"go-authentication/src/pkg"
 	"net/http"
 	"time"
 )
+
 type UserHandler struct {
 	userUsecase userservice.UserServiceImpl
 }
@@ -106,10 +106,9 @@ func (u *UserHandler) Profile(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	fmt.Println("Ajay here")
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("x-user", returedUser.Username)
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "successful login"})
+	json.NewEncoder(w).Encode(map[string]interface{}{"Uid":returedUser.Uid, "Username": returedUser.Username})
 }
