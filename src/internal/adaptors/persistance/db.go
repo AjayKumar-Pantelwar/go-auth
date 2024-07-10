@@ -2,7 +2,6 @@ package persistance
 
 import (
 	"database/sql"
-	"fmt"
 
 	_ "github.com/lib/pq"
 )
@@ -16,7 +15,6 @@ func NewDatabase() (*Database, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(("Connected to database"))
 	return &Database{db: db}, nil
 }
 

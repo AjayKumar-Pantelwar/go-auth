@@ -16,14 +16,14 @@ func InitRoutes(
 	router.Route("/auth", func(r chi.Router) {
 		r.Post("/register", userHandler.Register)
 		r.Post("/login", userHandler.Login)
-		// r.Post("/logout", Logout)
-
+		r.Post("/refresh", userHandler.Refresh)
 	})
 
 	router.Route("/user", func(r chi.Router) {
 		r.Use(middleware.Authenticate)
 		r.Get("/profile", userHandler.Profile)
+		r.Post("/logout", userHandler.Logout)
 	})
-
+	
 	return router
 }

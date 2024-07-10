@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	session "go-authentication/src/internal/core/session"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -11,14 +12,14 @@ import (
 var jwtKey = []byte("jhdsdjaiuuhgh")
 
 type Claims struct {
-	Username string `json:"username"`
+	Uid int `json:"uid"`
 	jwt.StandardClaims
 }
 
-func GenerateJWT(username string) (string, error) {
-	expirationTime := time.Now().Add(24 * time.Hour)
+func GenerateJWT(uid int) (string, time.Time, error) {
+	expirationTime := time.Now().Add(5 * time.Minute)
 	claims := &Claims{
-		Username: username,
+		Uid: uid,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
@@ -27,9 +28,9 @@ func GenerateJWT(username string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
-		return "", err
+		return "", time.Now(), err
 	}
-	return tokenString, nil
+	return tokenString, expirationTime, nil
 }
 
 func ValidateJWT(tokenString string) (*Claims, error) {
@@ -50,23 +51,23 @@ func ValidateJWT(tokenString string) (*Claims, error) {
 	return claims, nil
 }
 
-func GenerateSession(userId int) (map[string]interface{}, error) {
+func GenerateSession(userId int) (session.Session, error) {
 	tokenId := uuid.New()
-	expiresAt := time.Now().Add(24 * time.Hour)
+	expiresAt := time.Now().Add(2 * time.Hour)
 	issuedAt := time.Now()
 
 	hashToken, err := bcrypt.GenerateFromPassword([]byte(tokenId.String()), bcrypt.DefaultCost)
 
 	if err != nil {
-		return map[string]interface{}{}, err
+		return session.Session{}, err
 	}
 
-	session := map[string]interface{}{
-		"Id":        tokenId,
-		"Uid":       userId,
-		"TokenHash": string(hashToken),
-		"ExpiresAt": expiresAt,
-		"IssuedAt":  issuedAt,
+	session := session.Session{
+		Id:        tokenId,
+		Uid:       userId,
+		TokenHash: string(hashToken),
+		ExpiresAt: expiresAt,
+		IssuedAt:  issuedAt,
 	}
 
 	return session, nil

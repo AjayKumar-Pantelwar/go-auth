@@ -23,7 +23,7 @@ func Authenticate(next http.Handler) http.Handler {
 
 		// Set claims in context or request
 
-		ctx := context.WithValue(r.Context(), "user", claims.Username)
+		ctx := context.WithValue(r.Context(), "user", claims.Uid)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)

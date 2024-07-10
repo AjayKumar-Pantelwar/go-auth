@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go-authentication/src/internal/adaptors/persistance"
 	userhandler "go-authentication/src/internal/interfaces/input/api/rest/handler"
 	"go-authentication/src/internal/interfaces/input/api/rest/routes"
@@ -17,6 +18,7 @@ func main() {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 
+	fmt.Println("Connected to database")
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("failed to get cwd: %v", err)
@@ -33,13 +35,16 @@ func main() {
 	}
 
 	userRepo := persistance.NewUserRepo(database)
-	userService := user.NewUserService(userRepo)
+	sessionRepo := persistance.NewSessionRepo(database)
+	userService := user.NewUserService(userRepo, sessionRepo)
 	userHandler := userhandler.NewUserHandler(userService)
 
 	router := routes.InitRoutes(&userHandler)
 
-	if err := http.ListenAndServe(":8080", router); err != nil {
+	port := "8080"
+	
+	err = http.ListenAndServe(fmt.Sprintf(":%s", port), router);
+	if err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}
-
 }
