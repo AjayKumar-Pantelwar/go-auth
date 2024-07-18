@@ -49,7 +49,7 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	returnedUser, tokenString, tokenExpire, session, err := u.userService.LoginUser(requestUser)
+	loginResponse, err := u.userService.LoginUser(requestUser)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
@@ -58,8 +58,8 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	atCookie := http.Cookie{
 		Name:     "at",
-		Value:    tokenString,
-		Expires:  tokenExpire,
+		Value:    loginResponse.TokenString,
+		Expires:  loginResponse.TokenExpire,
 		Secure:   true,
 		SameSite: http.SameSiteNoneMode,
 		Path:     "/",
@@ -67,8 +67,8 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	sessCookie := http.Cookie{
 		Name:     "sess",
-		Value:    session.Id.String(),
-		Expires:  session.ExpiresAt,
+		Value:    loginResponse.Session.Id.String(),
+		Expires:  loginResponse.Session.ExpiresAt,
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteNoneMode,
@@ -79,7 +79,7 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &sessCookie)
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("x-user", returnedUser.Username)
+	w.Header().Set("x-user", loginResponse.FoundUser.Username)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "successful login"})
 }

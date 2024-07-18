@@ -3,7 +3,7 @@ package userservice
 import (
 	"fmt"
 	"go-authentication/src/internal/adaptors/persistance"
-	session "go-authentication/src/internal/core/session"
+	"go-authentication/src/internal/core/session"
 	user "go-authentication/src/internal/core/user"
 	"go-authentication/src/pkg"
 	"time"
@@ -27,38 +27,47 @@ func (u *UserService) RegisterUser(user user.User) (user.User, error) {
 	return newUser, err
 }
 
-func (u *UserService) LoginUser(requestUser user.User) (user.User, string, time.Time, session.Session, error) {
-	var foundUser user.User
-	var tokenString string
-	var tokenExpire time.Time
-	var session session.Session
+
+type LoginResponse struct {
+	FoundUser user.User
+	TokenString string
+	TokenExpire time.Time
+	Session session.Session
+}
+
+func (u *UserService) LoginUser(requestUser user.User) (LoginResponse, error) {
+	loginResponse := LoginResponse{}
 
 	foundUser, err := u.userRepo.GetUser(requestUser.Username)
-
 	if err != nil {
-		return foundUser, tokenString, tokenExpire, session, fmt.Errorf("invalid username")
+		return loginResponse, fmt.Errorf("invalid username")
 	}
 	
+	loginResponse.FoundUser = foundUser
 	if err := matchPassword(foundUser, requestUser.Password); err != nil {
-		return foundUser, tokenString, tokenExpire, session, fmt.Errorf("invalid password")
+		return loginResponse, fmt.Errorf("invalid password")
 	}
 
-	tokenString, tokenExpire, err = pkg.GenerateJWT(foundUser.Uid)
+	tokenString, tokenExpire, err := pkg.GenerateJWT(foundUser.Uid)
+	loginResponse.TokenString = tokenString
+	loginResponse.TokenExpire = tokenExpire
+
 	if err != nil {
-		return foundUser, tokenString, tokenExpire, session, fmt.Errorf("failed to generate jwt")
+		return loginResponse, fmt.Errorf("failed to generate jwt")
 	}
 
-	session, err = pkg.GenerateSession(foundUser.Uid)
+	session, err := pkg.GenerateSession(foundUser.Uid)
+	loginResponse.Session = session
 	if err != nil {
-		return foundUser, tokenString, tokenExpire, session, fmt.Errorf("failed to generate session")
+		return loginResponse, fmt.Errorf("failed to generate session")
 	}
 
 	err = u.sessionRepo.CreateSession(session)
 	if err != nil {
-		return foundUser, tokenString, tokenExpire, session, fmt.Errorf("failed to create session")
+		return loginResponse, fmt.Errorf("failed to create session")
 	}
 	
-	return foundUser, tokenString, tokenExpire, session, nil
+	return loginResponse, nil
 }
 
 func (u *UserService) GetJwtFromSession(sess string) (string, time.Time, error) {
