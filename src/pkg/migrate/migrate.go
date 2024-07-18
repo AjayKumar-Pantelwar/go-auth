@@ -10,10 +10,10 @@ import (
 )
 
 type Migrate struct {
-	path           string               
-	db             *sql.DB              
-	migrationFiles []DirEntryWithPrefix 
-	txn            *sql.Tx              
+	path           string
+	db             *sql.DB
+	migrationFiles []DirEntryWithPrefix
+	txn            *sql.Tx
 }
 
 func NewMigrate(db *sql.DB, dirPath string) Migrate {
@@ -26,6 +26,7 @@ func NewMigrate(db *sql.DB, dirPath string) Migrate {
 func (m *Migrate) RunMigrations() error {
 	rawEntries, err := os.ReadDir(m.path)
 	if err != nil {
+		fmt.Println("ERR1")
 		return err
 	}
 
@@ -37,16 +38,19 @@ func (m *Migrate) RunMigrations() error {
 
 	err = m.checkForSamePrefix(usableEntries)
 	if err != nil {
+		fmt.Println("ERR2")
 		return err
 	}
 
 	version, err1 := m.getVersion()
 	if err1 != nil {
+		fmt.Println("ERR3")
 		return err1
 	}
 
 	// It means we are already on latest db state
 	if version == len(usableEntries) {
+		fmt.Println("ERR4")
 		return nil
 	}
 
@@ -119,4 +123,3 @@ func (m *Migrate) parseFilesAndMigrateDb() error {
 	}
 	return nil
 }
-

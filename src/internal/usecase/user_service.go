@@ -12,10 +12,9 @@ import (
 )
 
 type UserService struct {
-	userRepo persistance.UserRepo
+	userRepo    persistance.UserRepo
 	sessionRepo persistance.SessionRepo
 }
-
 
 func NewUserService(userRepo persistance.UserRepo, sessionRepo persistance.SessionRepo) UserService {
 	return UserService{userRepo: userRepo, sessionRepo: sessionRepo}
@@ -27,12 +26,11 @@ func (u *UserService) RegisterUser(user user.User) (user.User, error) {
 	return newUser, err
 }
 
-
 type LoginResponse struct {
-	FoundUser user.User
+	FoundUser   user.User
 	TokenString string
 	TokenExpire time.Time
-	Session session.Session
+	Session     session.Session
 }
 
 func (u *UserService) LoginUser(requestUser user.User) (LoginResponse, error) {
@@ -42,7 +40,7 @@ func (u *UserService) LoginUser(requestUser user.User) (LoginResponse, error) {
 	if err != nil {
 		return loginResponse, fmt.Errorf("invalid username")
 	}
-	
+
 	loginResponse.FoundUser = foundUser
 	if err := matchPassword(foundUser, requestUser.Password); err != nil {
 		return loginResponse, fmt.Errorf("invalid password")
@@ -66,7 +64,7 @@ func (u *UserService) LoginUser(requestUser user.User) (LoginResponse, error) {
 	if err != nil {
 		return loginResponse, fmt.Errorf("failed to create session")
 	}
-	
+
 	return loginResponse, nil
 }
 
@@ -87,7 +85,7 @@ func (u *UserService) GetJwtFromSession(sess string) (string, time.Time, error) 
 	if err != nil {
 		return tokenString, tokenExpire, err
 	}
-	
+
 	return tokenString, tokenExpire, nil
 }
 
@@ -98,7 +96,7 @@ func (u *UserService) GetUserById(id int) (user.User, error) {
 
 func (u *UserService) LogoutUser(id int) error {
 	err := u.sessionRepo.DeleteSession(id)
-	return  err
+	return err
 }
 
 func matchPassword(user user.User, password string) error {
